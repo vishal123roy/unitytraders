@@ -1,9 +1,34 @@
-// import mongoose from "mongoose";
+import mongoose from "mongoose";
 
-// const { schema } = mongoose;
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      trim: true,
+    },
+    email: {
+      type: String,
+      unique: true,
+      sparse: true, 
+      lowercase: true,
+    },
+    mobile: {
+      type: String,
+      required: [true, "Mobile number is required"],
+      unique: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+    },
+    profileImage: {
+      type: String, 
+      default: "",
+    },
+  },
+  { timestamps: true }
+);
 
-// const userSchema = new mongoose.schema(
-//     {
-
-//     }
-// )
+export default mongoose.model("User", userSchema);
