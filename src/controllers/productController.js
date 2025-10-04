@@ -1,4 +1,4 @@
-import Product from "../models/product";
+import Product from "../models/product.js";
 
 export const getProduct = async (req, res) => {
   try {
@@ -15,9 +15,9 @@ export const getProduct = async (req, res) => {
 
 export const addProduct = async (req, res) => {
   try {
-    const { name, unit, point } = req.body;
+    const { productName, unit, point } = req.body;
 
-    if (!name || !unit || !point) {
+    if (!productName || !unit || !point) {
       return res.status(400).json({ message: "All fields are required" });
     }
     const exisitingProduct = await Product.findOne({ productName });
@@ -42,7 +42,7 @@ export const addProduct = async (req, res) => {
 
 export const editProduct = async (req, res) => {
   try {
-    const productId = req.params;
+    const {id:productId} = req.params;
     const { newName, newUnit, newPoint } = req.body;
     const product = await Product.findById({ _id: productId });
     
@@ -50,13 +50,12 @@ export const editProduct = async (req, res) => {
       return res.status(400).json({ message: "product not found" });
     }
     
-    await Product.findByIdAndUpdate(productId,{
-        newName,
-        newUnit,
-        newPoint
+    const updatedProduct = await Product.findByIdAndUpdate(productId,{
+        productName:newName,
+        unit:newUnit,
+        newPoint:newPoint
     })
-
-    res.status(201).json({message:"Product updated"});
+    res.status(201).json({message:"Product updated",updatedProduct});
 
   } catch (error) {
     res.status(500).json({ message: "server error" });
@@ -65,7 +64,7 @@ export const editProduct = async (req, res) => {
 
 export const removeProduct = async (req, res) => {
   try {
-    const productId = req.params
+    const productId = req.params.id;
     
     if(!productId){
         return res.status(400).json({message:"product not found"});
