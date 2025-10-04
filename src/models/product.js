@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema({
         trim:true
     },
     unit:{
-        type:Number,
+        type:String,
         required:true
     },
     point:{
