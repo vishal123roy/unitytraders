@@ -18,6 +18,7 @@ export const upload = multer({ storage });
 // 🟢 Get all customers
 export const getCustomers = async (req, res) => {
   try {
+    await connectDB();
     const customers = await Customer.find();
     if (!customers.length) {
       return res.status(404).json({ message: "No customers found" });
@@ -31,6 +32,7 @@ export const getCustomers = async (req, res) => {
 
 export const getCustomerById = async (req, res) => {
   try {
+    await connectDB();
     const { userId } = req.params;
 
     const customer = await Customer.findById(userId);
