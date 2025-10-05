@@ -1,11 +1,23 @@
 import express from "express";
-import { getCustomers, addCustomer, editCustomer, removeCustomer, upload } from "../controllers/customerController.js";
+import {
+  getCustomers,
+  addCustomer,
+  editCustomerDetails,
+  updateUserProfileImage,
+  removeCustomer,
+  upload,
+  getCustomerById
+} from "../controllers/customerController.js";
+import { uploadProfileImage } from '../config/multerConfig.js';
+
 
 const router = express.Router();
 
-router.get("/getCustomer", getCustomers);
-router.post("/addCustomer", upload.single("profileImage"), addCustomer);
-router.put("/editCustomer/:id", upload.single("profileImage"), editCustomer);
-router.delete("/removeCustomer/:id", removeCustomer);
+router.get("/get", getCustomers);
+router.get("/get/:userId", getCustomerById);
+router.post("/add", upload.single("profileImage"), addCustomer);
+router.put("/edit/:userId", editCustomerDetails);
+router.put("/update-image/:userId", uploadProfileImage.single("profileImage"), updateUserProfileImage);
+router.delete("/remove/:userId", removeCustomer);
 
 export default router;
