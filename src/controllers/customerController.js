@@ -49,6 +49,11 @@ export const getCustomerById = async (req, res) => {
 // 🟢 Add new customer
 export const addCustomer = async (req, res) => {
   try {
+    console.log(req.body.customerName)
+        console.log(req.body.mobile)
+
+            console.log(req.body.point)
+
     const { customerName, mobile, point } = req.body;
 
     if (!customerName || point === undefined) {
