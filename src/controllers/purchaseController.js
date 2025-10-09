@@ -1,5 +1,5 @@
-import Customer from "../models/customer";
-import Purchase from "../models/purchase";
+import Customer from "../models/customer.js";
+import Purchase from "../models/purchase.js";
 
 export const getPurchase = async (req,res) => {
     try {

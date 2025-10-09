@@ -19,14 +19,12 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/users", userRoutes);
-<<<<<<< HEAD
+
 app.use("/api/products",productRoutes);
 app.use("/api/customers",customerRoutes);
 app.use("/api/purchase",purchaseRoutes);
-=======
 app.use("/api/products", productRoutes);
 app.use("/api/customers", customerRoutes);
->>>>>>> f436abd39367387ee9472bfbb739394f7d34d079
 
 connectDB();
 
