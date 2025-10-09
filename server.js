@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import userRoutes from "./src/routes/userRoutes.js";
 import productRoutes from "./src/routes/productRoutes.js";
 import customerRoutes from "./src/routes/customerRoutes.js";
+import purchaseRoutes from "./src/routes/purchaseRoutes.js"
 import { connectDB } from "./src/db.js";
 
 dotenv.config();
@@ -15,7 +16,7 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/products",productRoutes);
 app.use("/api/customers",customerRoutes);
-
+app.use("/api/purchase",purchaseRoutes);
 
 connectDB();
 
