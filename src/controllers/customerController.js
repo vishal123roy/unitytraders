@@ -1,19 +1,4 @@
 import Customer from "../models/customer.js";
-import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../config/cloudinaryConfig.js"; // Use configured instance
-
-// 🧩 Multer + Cloudinary Storage
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "customers", // Cloudinary folder
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 500, height: 500, crop: "limit" }],
-  },
-});
-
-export const upload = multer({ storage });
 
 // 🟢 Get all customers
 export const getCustomers = async (req, res) => {
@@ -22,10 +7,25 @@ export const getCustomers = async (req, res) => {
     if (!customers.length) {
       return res.status(404).json({ message: "No customers found" });
     }
-    res.status(200).json(customers);
+    res.status(200).json({ message: "Customers retrieved successfully", customers });
   } catch (error) {
     console.error("Error fetching customers:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error while fetching customers" });
+  }
+};
+
+// 🟢 Get customer by ID
+export const getCustomerById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const customer = await Customer.findById(userId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    res.status(200).json({ message: "Customer retrieved successfully", customer });
+  } catch (error) {
+    console.error("Error fetching customer by ID:", error);
+    res.status(500).json({ message: "Server error while fetching customer" });
   }
 };
 
@@ -40,71 +40,79 @@ export const addCustomer = async (req, res) => {
 
     const existingCustomer = await Customer.findOne({ customerName });
     if (existingCustomer) {
-      return res.status(400).json({ message: "Customer already exists" });
+      return res.status(400).json({ message: "Customer with this name already exists" });
     }
 
     const profileImage = req.file ? req.file.path : "";
 
-    const newCustomer = new Customer({
-      customerName,
-      mobile,
-      point,
-      profileImage,
-    });
-
+    const newCustomer = new Customer({ customerName, mobile, point, profileImage });
     await newCustomer.save();
-    res.status(201).json({ success: true, customer: newCustomer });
+
+    res.status(201).json({ message: "Customer added successfully", customer: newCustomer });
   } catch (error) {
     console.error("Error adding customer:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error while adding customer" });
   }
 };
 
-// 🟢 Edit customer
-export const editCustomer = async (req, res) => {
+// 🟢 Edit customer details (name, mobile, point only)
+export const editCustomerDetails = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { userId } = req.params;
     const { customerName, mobile, point } = req.body;
 
-    const customer = await Customer.findById(id);
+    const customer = await Customer.findById(userId);
     if (!customer) return res.status(404).json({ message: "Customer not found" });
-
-    // Replace image if uploaded
-    if (req.file) {
-      if (customer.profileImage) {
-        const publicId = customer.profileImage.split("/").slice(-1)[0].split(".")[0];
-        await cloudinary.uploader.destroy(`customers/${publicId}`);
-      }
-      customer.profileImage = req.file.path;
-    }
 
     if (customerName) customer.customerName = customerName;
     if (mobile) customer.mobile = mobile;
-    if (point) customer.point = point;
+    if (point !== undefined) customer.point = point;
 
     await customer.save();
-    res.status(200).json({ message: "Customer updated", customer });
+    res.status(200).json({ message: "Customer details updated successfully", customer });
   } catch (error) {
-    console.error("Error updating customer:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Error updating customer details:", error);
+    res.status(500).json({ message: "Server error while updating customer" });
+  }
+};
+
+// 🟢 Update profile image
+export const updateUserProfileImage = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Profile image file is required" });
+    }
+
+    const updatedUser = await Customer.findByIdAndUpdate(
+      userId,
+      { profileImage: req.file.path },
+      { new: true }
+    );
+
+    if (!updatedUser) return res.status(404).json({ message: "Customer not found" });
+
+    res.status(200).json({ message: "Profile image updated successfully", customer: updatedUser });
+  } catch (error) {
+    console.error("Error updating profile image:", error);
+    res.status(500).json({ message: "Server error while updating profile image" });
   }
 };
 
 // 🟢 Remove customer
 export const removeCustomer = async (req, res) => {
   try {
-    const { id } = req.params;
-    const customer = await Customer.findByIdAndDelete(id);
+    const { userId } = req.params;
+    const customer = await Customer.findByIdAndDelete(userId);
     if (!customer) return res.status(404).json({ message: "Customer not found" });
 
-    if (customer.profileImage) {
-      const publicId = customer.profileImage.split("/").slice(-1)[0].split(".")[0];
-      await cloudinary.uploader.destroy(`customers/${publicId}`);
-    }
+    // If profileImage exists, you may delete local file here if needed
+    // e.g., fs.unlink(customer.profileImage)
 
-    res.status(200).json({ message: "Customer removed" });
+    res.status(200).json({ message: "Customer removed successfully" });
   } catch (error) {
     console.error("Error removing customer:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error while removing customer" });
   }
 };
