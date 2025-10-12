@@ -8,7 +8,7 @@ export const getPurchase = async (req,res) => {
             return res.status(400).json({message:"puchaselist not found"});
         }
 
-        res.status(201).json(purchaselist);
+        res.status(200).json(purchaselist);
 
     } catch (error) {
         res.status(500).json({message:"server error"})
