@@ -32,6 +32,8 @@ export const addPurchase = async (req,res) => {
         
         await newPurchase.save();
 
+        res.status(201).json(newPurchase)
+
     } catch (error) {
         res.status(500).json({message:"server error"});
     }
@@ -39,21 +41,17 @@ export const addPurchase = async (req,res) => {
 
 export const getPurchaseList = async (req,res) => {
     try {
-        const {PurchaseId} = req.body;
+        const {id:purchaseId} = req.params;
 
-        const purchaseList = await Purchase.findById({_id:PurchaseId});
+        const purchaseList = await Purchase.findById(purchaseId).populate('productList.product');
 
         if(!purchaseList){
             return res.status(400).json({message:"purchaselist not found"});
         }
 
         const {productList} = purchaseList;
-        
-        const list = productList.map((item)=>{
-            return item.findById().populate();
-        })
 
-        res.status(200).json(list)
+        res.status(200).json(productList);
 
     } catch (error) {
         res.status(500).json({message:"server error"})

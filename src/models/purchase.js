@@ -14,8 +14,15 @@ const purchaseSchema = new mongoose.Schema(
         },
         productList:[
             {
+                product:{
                 type:mongoose.Schema.Types.ObjectId,
                 ref:"Product"
+            },
+            count:{
+                type:Number,
+                default:1,
+                required:true
+            }
             }
         ],
         totalPoints:{
