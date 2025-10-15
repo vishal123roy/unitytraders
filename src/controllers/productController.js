@@ -25,7 +25,7 @@ export const addProduct = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const existingProduct = await Product.findOne({ productName });
+    const existingProduct = await Product.findOne({ productName, unit });
     if (existingProduct) {
       return res.status(400).json({ message: "Product already exists" });
     }
