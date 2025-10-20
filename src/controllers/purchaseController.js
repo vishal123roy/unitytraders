@@ -33,10 +33,10 @@ export const getPurchase = async (req, res) => {
  */
 export const addPurchase = async (req, res) => {
   try {
-    const { customerId, products, total } = req.body;
+    const { customerId, productList, totalPoints } = req.body;
     console.log("Printing the response")
-    if (!customerId || !products || total === undefined) {
-      return res.status(400).json({ message: "all fields are required" });
+    if (!customerId || !productList || totalPoints === undefined) {
+      return res.status(400).json({ message: "all fields are required",customerId,productList,totalPoints });
     }
 
     const customer = await Customer.findById(customerId);
@@ -46,8 +46,8 @@ export const addPurchase = async (req, res) => {
     const purchase = new Purchase({
       customer: customerId,
       date: new Date(),
-      productList: products,
-      totalPoints: total,
+      productList: productList,
+      totalPoints: totalPoints,
     });
     await purchase.save();
 
@@ -73,7 +73,7 @@ export const addPurchase = async (req, res) => {
       }
 
       // amount to allocate = min(purchase total, remainingCapacity)
-      const allocate = Math.min(total, remainingCapacity);
+      const allocate = Math.min(totalPoints, remainingCapacity);
       progress.earnedPoints = (progress.earnedPoints || 0) + allocate;
 
       await progress.save();
