@@ -8,6 +8,8 @@ import customerRoutes from "./src/routes/customerRoutes.js";
 import purchaseRoutes from "./src/routes/purchaseRoutes.js"
 import schemeRoutes from "./src/routes/schemeRoutes.js"
 import { connectDB } from "./src/db.js";
+import customerSchemeRoutes from './src/routes/customerSchemeRoutes.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,10 +24,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/users", userRoutes);
 
 app.use("/api/products",productRoutes);
-app.use("/api/customers",customerRoutes);
-app.use("/api/purchase",purchaseRoutes);
+app.use("/api/customer-routes",customerRoutes);
+app.use("/api/purchases",purchaseRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api/customers", customerRoutes);
+app.use("/api/customers", customerSchemeRoutes);
 
 app.use("/api/schemes",schemeRoutes);
 
