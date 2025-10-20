@@ -1,41 +1,65 @@
+// controllers/schemeController.js
 import Scheme from "../models/scheme.js";
+import CustomerSchemeProgress from "../models/CustomerSchemeProgress.js";
 
-export const getScheme = async (req, res) => {
+// Create scheme
+export const createScheme = async (req, res) => {
   try {
-
-    const schemeList = await Scheme.find();
-
-    if (!schemeList) {
-      return res.status(400).json({ message: "no scheme are available" });
+    const { schemeName, duration, schemeType, maxPoint, gift, slabs } = req.body;
+    if (!schemeName || !duration || !duration.from || !duration.to || !schemeType || !maxPoint) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    res.status(200).json(schemeList);
-  } catch (error) {
-    res.status(500).json({ message: "server error" });
+    const scheme = new Scheme({ schemeName, duration, schemeType, maxPoint, gift, slabs });
+    await scheme.save();
+    res.status(201).json({ message: "Scheme created", scheme });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-export const addScheme = async (req, res) => {
+// Get all schemes
+export const getSchemes = async (req, res) => {
   try {
-    const { schemeName, duration, schemeType, maxPoint } = req.body;
+    const schemes = await Scheme.find().sort({ createdAt: -1 });
+    res.status(200).json(schemes);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
 
-    const scheme = await Scheme.findOne({ schemeName });
+// Get scheme by id
+export const getSchemeById = async (req, res) => {
+  try {
+    const scheme = await Scheme.findById(req.params.id);
+    if (!scheme) return res.status(404).json({ message: "Scheme not found" });
+    res.status(200).json(scheme);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
 
-    if (scheme) {
-      return res.status(400).json({ message: "scheme is already available" });
-    }
+// Update scheme
+export const updateScheme = async (req, res) => {
+  try {
+    const updated = await Scheme.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ message: "Scheme not found" });
+    res.status(200).json({ message: "Scheme updated", scheme: updated });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
 
-    const newScheme = new Scheme.create({
-      schemeName,
-      duration,
-      schemeType,
-      maxPoint,
-    });
-
-    await newScheme.save();
-
-    res.status(201).json({ message: "scheme created" });
-  } catch (error) {
-    res.status(500).json({ message: "server error" });
+// Delete scheme
+export const deleteScheme = async (req, res) => {
+  try {
+    const removed = await Scheme.findByIdAndDelete(req.params.id);
+    if (!removed) return res.status(404).json({ message: "Scheme not found" });
+    // Also remove CustomerSchemeProgress docs referencing it
+    await CustomerSchemeProgress.deleteMany({ scheme: removed._id });
+    res.status(200).json({ message: "Scheme removed" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
