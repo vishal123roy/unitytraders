@@ -6,6 +6,7 @@ import userRoutes from "./src/routes/userRoutes.js";
 import productRoutes from "./src/routes/productRoutes.js";
 import customerRoutes from "./src/routes/customerRoutes.js";
 import purchaseRoutes from "./src/routes/purchaseRoutes.js"
+import schemeRoutes from "./src/routes/schemeRoutes.js"
 import { connectDB } from "./src/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,6 +26,8 @@ app.use("/api/customers",customerRoutes);
 app.use("/api/purchase",purchaseRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/customers", customerRoutes);
+
+app.use("/api/schemes",schemeRoutes);
 
 connectDB();
 

@@ -2,10 +2,11 @@ import mongoose from "mongoose";
 
 const schemeSchema = new mongoose.Schema(
     {
-        shcemeName:{
+        schemeName:{
             type:String,
             required:true,
-            trim:true
+            trim:true,
+            unique:true
         },
         duration:{
             from:{
