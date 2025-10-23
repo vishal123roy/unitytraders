@@ -9,7 +9,7 @@ import purchaseRoutes from "./src/routes/purchaseRoutes.js"
 import schemeRoutes from "./src/routes/schemeRoutes.js"
 import { connectDB } from "./src/db.js";
 import customerSchemeRoutes from './src/routes/customerSchemeRoutes.js';
-
+import homeRoutes from './src/routes/homeRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,6 +30,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/customers", customerSchemeRoutes);
 
 app.use("/api/schemes",schemeRoutes);
+app.use("/api/home",homeRoutes)
 
 connectDB();
 

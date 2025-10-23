@@ -15,9 +15,9 @@ const schemeSchema = new mongoose.Schema({
   },
   schemeType: { type: String, enum: ["monthly", "annual", "special"], required: true },
   maxPoint: { type: Number, required: true },
-  gift: { type: String, default: "" },
   slabs: [slabSchema],
   active: { type: Boolean, default: true },
 }, { timestamps: true });
 
 export default mongoose.model("Scheme", schemeSchema);
+

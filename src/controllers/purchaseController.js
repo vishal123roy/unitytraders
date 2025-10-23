@@ -53,10 +53,7 @@ export const addPurchase = async (req, res) => {
 
     // allocate points to active schemes
     const activeSchemes = await findActiveSchemesByDate(purchase.date);
-
-    // For each active scheme, allocate as much of the purchase points as possible.
-    // We will distribute the same total points to all active schemes (because customer wants to be eligible for multiple schemes simultaneously).
-    // If you want to split points among schemes, change logic accordingly.
+  
     for (const scheme of activeSchemes) {
       // find or create progress doc
       let progress = await CustomerSchemeProgress.findOne({ customer: customerId, scheme: scheme._id });
@@ -67,6 +64,7 @@ export const addPurchase = async (req, res) => {
       // compute remaining allowed points for the scheme (don't exceed scheme.maxPoint)
       const remainingCapacity = Math.max(0, scheme.maxPoint - (progress.earnedPoints || 0));
       if (remainingCapacity <= 0) {
+
         // scheme already full for this customer
         await progress.save();
         continue;
