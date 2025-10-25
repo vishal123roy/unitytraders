@@ -1,6 +1,15 @@
 // controllers/customerController.js
 import Customer from "../models/customer.js";
 import cloudinary from "../config/cloudinaryConfig.js";
+import { Readable } from "stream";
+
+// Helper: convert buffer to readable stream
+const bufferToStream = (buffer) => {
+  const readable = new Readable();
+  readable.push(buffer);
+  readable.push(null);
+  return readable;
+};
 
 // 🟢 Get all customers
 export const getCustomers = async (req, res) => {
@@ -21,9 +30,7 @@ export const getCustomerById = async (req, res) => {
   try {
     const { userId } = req.params;
     const customer = await Customer.findById(userId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
+    if (!customer) return res.status(404).json({ message: "Customer not found" });
     res.status(200).json({ message: "Customer retrieved successfully", customer });
   } catch (error) {
     console.error("Error fetching customer by ID:", error);
@@ -31,10 +38,11 @@ export const getCustomerById = async (req, res) => {
   }
 };
 
-// 🟢 Add new customer
+// 🟢 Add new customer (FormData support)
 export const addCustomer = async (req, res) => {
   try {
-    const { customerName, mobile, point, profileImage } = req.body;
+    console.log(req.file,'llllllllllllllllllll');
+    const { customerName, mobile, point } = req.body;
 
     if (!customerName || point === undefined) {
       return res.status(400).json({ message: "Customer name and points are required" });
@@ -47,35 +55,45 @@ export const addCustomer = async (req, res) => {
 
     let imageUrl = null;
 
-    // Upload profile image to Cloudinary if provided
-    if (profileImage) {
+    // Upload profile image to Cloudinary if provided as file
+    if (req.file && req.file.buffer) {
       try {
-        const result = await cloudinary.uploader.upload(profileImage, {
-          folder: "customer_profiles",
-          resource_type: "image",
-          transformation: [
-            { width: 500, height: 500, crop: "limit" },
-            { quality: "auto" },
-          ],
+        const result = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: "customer_profiles",
+              resource_type: "image",
+              transformation: [
+                { width: 500, height: 500, crop: "limit" },
+                { quality: "auto" },
+              ],
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+
+          bufferToStream(req.file.buffer).pipe(uploadStream);
         });
+
         imageUrl = result.secure_url;
       } catch (uploadError) {
-        return res.status(500).json({ 
-          message: "Profile image upload failed", 
-          error: uploadError.message 
+        return res.status(500).json({
+          message: "Profile image upload failed",
+          error: uploadError.message,
         });
       }
     }
 
-    const newCustomer = new Customer({ 
-      customerName, 
-      mobile, 
-      point, 
-      profileImage: imageUrl 
+    const newCustomer = new Customer({
+      customerName,
+      mobile,
+      point,
+      profileImage: imageUrl,
     });
-    
-    await newCustomer.save();
 
+    await newCustomer.save();
     res.status(201).json({ message: "Customer added successfully", customer: newCustomer });
   } catch (error) {
     console.error("Error adding customer:", error);
@@ -104,61 +122,62 @@ export const editCustomerDetails = async (req, res) => {
   }
 };
 
-// 🟢 Update profile image
+// 🟢 Update profile image (FormData)
 export const updateUserProfileImage = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { profileImage } = req.body;
 
-    if (!profileImage) {
-      return res.status(400).json({ message: "Profile image is required" });
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ message: "Profile image file is required" });
     }
 
     const customer = await Customer.findById(userId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
+    if (!customer) return res.status(404).json({ message: "Customer not found" });
 
     try {
-      // Upload new image to Cloudinary
-      const result = await cloudinary.uploader.upload(profileImage, {
-        folder: "customer_profiles",
-        resource_type: "image",
-        transformation: [
-          { width: 500, height: 500, crop: "limit" },
-          { quality: "auto" },
-        ],
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "customer_profiles",
+            resource_type: "image",
+            transformation: [
+              { width: 500, height: 500, crop: "limit" },
+              { quality: "auto" },
+            ],
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+
+        bufferToStream(req.file.buffer).pipe(uploadStream);
       });
 
       const newImageUrl = result.secure_url;
 
-      // Delete old image from Cloudinary if exists
+      // Delete old image if exists
       if (customer.profileImage) {
         try {
-          const urlParts = customer.profileImage.split('/');
+          const urlParts = customer.profileImage.split("/");
           const publicIdWithExt = urlParts[urlParts.length - 1];
-          const publicId = `customer_profiles/${publicIdWithExt.split('.')[0]}`;
-          
+          const publicId = `customer_profiles/${publicIdWithExt.split(".")[0]}`;
           await cloudinary.uploader.destroy(publicId);
         } catch (deleteError) {
           console.error("Error deleting old profile image:", deleteError);
-          // Continue even if old image deletion fails
         }
       }
 
       customer.profileImage = newImageUrl;
       await customer.save();
 
-      res.status(200).json({ 
+      res.status(200).json({
         success: true,
-        message: "Profile image updated successfully", 
-        customer 
+        message: "Profile image updated successfully",
+        customer,
       });
     } catch (uploadError) {
-      return res.status(500).json({ 
-        message: "Image upload failed", 
-        error: uploadError.message 
-      });
+      return res.status(500).json({ message: "Image upload failed", error: uploadError.message });
     }
   } catch (error) {
     console.error("Error updating profile image:", error);
@@ -171,22 +190,17 @@ export const removeCustomer = async (req, res) => {
   try {
     const { userId } = req.params;
     const customer = await Customer.findById(userId);
-    
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
 
-    // Delete profile image from Cloudinary if exists
+    if (!customer) return res.status(404).json({ message: "Customer not found" });
+
     if (customer.profileImage) {
       try {
-        const urlParts = customer.profileImage.split('/');
+        const urlParts = customer.profileImage.split("/");
         const publicIdWithExt = urlParts[urlParts.length - 1];
-        const publicId = `customer_profiles/${publicIdWithExt.split('.')[0]}`;
-        
+        const publicId = `customer_profiles/${publicIdWithExt.split(".")[0]}`;
         await cloudinary.uploader.destroy(publicId);
       } catch (deleteError) {
         console.error("Error deleting customer profile image:", deleteError);
-        // Continue with customer deletion even if image deletion fails
       }
     }
 

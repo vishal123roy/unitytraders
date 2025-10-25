@@ -18,6 +18,8 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

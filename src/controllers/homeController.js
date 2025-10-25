@@ -36,35 +36,36 @@ export const getSchemes = async (req, res) => {
   }
 };
 
-
-export const getMonthlyTop = async (req,res) => {
+export const getMonthlyTop = async (req, res) => {
     try {
-        const progress = await CustomerSchemeProgress.find().populate("scheme");
+        let progress = await CustomerSchemeProgress.find().populate("scheme");
         progress = progress.filter(obj => obj.scheme.schemeType === "monthly");
 
-        if(!progress){
-            return res.status(400).json({message:"no schemeprogress found"});
+        if (!progress || progress.length === 0) {
+            return res.status(400).json({ message: "No scheme progress found" });
         }
 
         return res.status(200).json(progress);
     } catch (error) {
-        res.status(500).json({message:"server error"})
+        console.error(error); // Add this to see the actual error in the console
+        res.status(500).json({ message: "Server error" });
     }
-}
-
-export const getAnnualTop = async (req,res) => {
-            try {
-                const progress = await CustomerSchemeProgress.find().populate("scheme");
-                progress = progress.filter(obj => obj.scheme.schemeType === "annual");
-                
-                if(!progress){
-                    return res.status(400).json({message:"no schemeprogress found"});
-                }
-
-                return res.status(200).json(progress);
-
-            } catch (error) {
-                res.status(500).json({message:"server error"})
-        }    
 };
+
+export const getAnnualTop = async (req, res) => {
+    try {
+        let progress = await CustomerSchemeProgress.find().populate("scheme");
+        progress = progress.filter(obj => obj.scheme.schemeType === "annual");
+
+        if (!progress || progress.length === 0) {
+            return res.status(400).json({ message: "No scheme progress found" });
+        }
+
+        return res.status(200).json(progress);
+    } catch (error) {
+        console.error(error); // logs the actual error
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 
