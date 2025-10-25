@@ -125,7 +125,7 @@ export const editUser = async (req, res) => {
 export const updateProfileImage = async (req, res) => {
   try {
     const { id } = req.params;
-    const { profileImage } = req.body;
+    const { profileImage } = req.body; // base64 string from Flutter
 
     if (!profileImage) {
       return res.status(400).json({ message: "No image provided" });
@@ -137,29 +137,27 @@ export const updateProfileImage = async (req, res) => {
     }
 
     try {
-      // Upload new image to Cloudinary
+      // Upload base64 string directly to Cloudinary
       const result = await cloudinary.uploader.upload(profileImage, {
         folder: "profile_images",
         resource_type: "image",
         transformation: [
-          { width: 500, height: 500, crop: "limit" }, // Limit max size
-          { quality: "auto" }, // Auto quality
+          { width: 500, height: 500, crop: "limit" },
+          { quality: "auto" },
         ],
       });
 
       const newImageUrl = result.secure_url;
 
-      // Delete old image from Cloudinary if exists
+      // Delete old image if exists
       if (user.profileImage) {
         try {
           const urlParts = user.profileImage.split('/');
           const publicIdWithExt = urlParts[urlParts.length - 1];
           const publicId = `profile_images/${publicIdWithExt.split('.')[0]}`;
-          
           await cloudinary.uploader.destroy(publicId);
         } catch (deleteError) {
           console.error("Error deleting old profile image:", deleteError);
-          // Continue even if old image deletion fails
         }
       }
 
@@ -173,9 +171,9 @@ export const updateProfileImage = async (req, res) => {
         profileImage: user.profileImage,
       });
     } catch (uploadError) {
-      return res.status(500).json({ 
-        message: "Image upload failed", 
-        error: uploadError.message 
+      return res.status(500).json({
+        message: "Image upload failed",
+        error: uploadError.message,
       });
     }
   } catch (error) {
