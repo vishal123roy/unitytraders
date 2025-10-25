@@ -6,7 +6,7 @@ export const getUser = async (req,res) => {
     try {
         const {id:userId} = req.params;
 
-        const user = await User.serId);
+        const user = await User.findOne({_id:userId});
 
         if(!user){
            return res.status(400).json({Message:"user not found"});
