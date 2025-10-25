@@ -1,6 +1,5 @@
-// controllers/productController.js
 import Product from "../models/product.js";
-import fs from "fs";
+import cloudinary from "../config/cloudinaryConfig.js";
 
 // 🟢 Get all products
 export const getProduct = async (req, res) => {
@@ -15,11 +14,12 @@ export const getProduct = async (req, res) => {
   }
 };
 
-// 🟢 Add product (with optional image)
+// 🟢 Add product (image sent as base64 string in form)
 export const addProduct = async (req, res) => {
   try {
-    const { productName, unit, point } = req.body;
-    const productImage = req.file ? req.file.path : null;
+    // All fields come from form
+    const { productName, unit, point, productImage } = req.body;
+    console.log('ppppppppppppppppppppppppppp',req.body.productName)
 
     if (!productName || !unit || !point) {
       return res.status(400).json({ message: "All fields are required" });
@@ -30,11 +30,28 @@ export const addProduct = async (req, res) => {
       return res.status(400).json({ message: "Product already exists" });
     }
 
+    let imageUrl = null;
+
+    if (productImage) {
+      try {
+        const result = await cloudinary.uploader.upload(productImage, {
+          folder: "products",
+          resource_type: "image",
+        });
+        imageUrl = result.secure_url;
+      } catch (uploadError) {
+        return res.status(500).json({
+          message: "Image upload failed",
+          error: uploadError.message,
+        });
+      }
+    }
+
     const newProduct = new Product({
       productName,
       unit,
       point,
-      productImage, // ✅ Store the image path
+      productImage: imageUrl,
     });
 
     await newProduct.save();
@@ -44,7 +61,7 @@ export const addProduct = async (req, res) => {
   }
 };
 
-// 🟡 Edit product (name, unit, point)
+// 🟡 Edit product
 export const editProduct = async (req, res) => {
   try {
     const { id: productId } = req.params;
@@ -76,9 +93,15 @@ export const removeProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Delete old image file if exists
-    if (product.productImage && fs.existsSync(product.productImage)) {
-      fs.unlinkSync(product.productImage);
+    if (product.productImage) {
+      try {
+        const urlParts = product.productImage.split("/");
+        const publicIdWithExt = urlParts[urlParts.length - 1];
+        const publicId = `products/${publicIdWithExt.split(".")[0]}`;
+        await cloudinary.uploader.destroy(publicId);
+      } catch (deleteError) {
+        console.error("Error deleting image from Cloudinary:", deleteError);
+      }
     }
 
     await Product.findByIdAndDelete(productId);
@@ -88,33 +111,54 @@ export const removeProduct = async (req, res) => {
   }
 };
 
-// 🟣 Separate API to update only the image
+// 🟣 Update only the image
 export const updateProductImage = async (req, res) => {
   try {
     const { id: productId } = req.params;
-    const product = await Product.findById(productId);
+    const { productImage } = req.body;
 
+    const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ message: "No image uploaded" });
+    if (!productImage) {
+      return res.status(400).json({ message: "No image provided" });
     }
 
-    // Delete old image if exists
-    if (product.productImage && fs.existsSync(product.productImage)) {
-      fs.unlinkSync(product.productImage);
+    try {
+      const result = await cloudinary.uploader.upload(productImage, {
+        folder: "products",
+        resource_type: "image",
+      });
+
+      const newImageUrl = result.secure_url;
+
+      if (product.productImage) {
+        try {
+          const urlParts = product.productImage.split("/");
+          const publicIdWithExt = urlParts[urlParts.length - 1];
+          const publicId = `products/${publicIdWithExt.split(".")[0]}`;
+          await cloudinary.uploader.destroy(publicId);
+        } catch (deleteError) {
+          console.error("Error deleting old image:", deleteError);
+        }
+      }
+
+      product.productImage = newImageUrl;
+      await product.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Product image updated successfully",
+        product,
+      });
+    } catch (uploadError) {
+      return res.status(500).json({
+        message: "Image upload failed",
+        error: uploadError.message,
+      });
     }
-
-    product.productImage = req.file.path;
-    await product.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Product image updated successfully",
-      product,
-    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
