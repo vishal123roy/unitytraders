@@ -126,15 +126,20 @@ export const editCustomerDetails = async (req, res) => {
 export const updateUserProfileImage = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { profileImage } = req.body; // Expect Base64 string
 
-    if (!req.file || !req.file.buffer) {
-      return res.status(400).json({ message: "Profile image file is required" });
+    if (!profileImage) {
+      return res.status(400).json({ message: "Profile image is required" });
     }
 
     const customer = await Customer.findById(userId);
     if (!customer) return res.status(404).json({ message: "Customer not found" });
 
+    // Convert Base64 to buffer
+    const buffer = Buffer.from(profileImage, "base64");
+
     try {
+      // Upload to Cloudinary
       const result = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
@@ -150,8 +155,7 @@ export const updateUserProfileImage = async (req, res) => {
             else resolve(result);
           }
         );
-
-        bufferToStream(req.file.buffer).pipe(uploadStream);
+        Readable.from(buffer).pipe(uploadStream);
       });
 
       const newImageUrl = result.secure_url;
@@ -184,7 +188,6 @@ export const updateUserProfileImage = async (req, res) => {
     res.status(500).json({ message: "Server error while updating profile image" });
   }
 };
-
 // 🟢 Remove customer
 export const removeCustomer = async (req, res) => {
   try {
