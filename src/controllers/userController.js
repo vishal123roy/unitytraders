@@ -1,5 +1,7 @@
+// controllers/userController.js
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
+import cloudinary from "../config/cloudinaryConfig.js";
 
 // Register user
 export const registerUser = async (req, res) => {
@@ -70,6 +72,7 @@ export const loginUser = async (req, res) => {
         email: user.email,
         mobile: user.mobile,
         isAdmin: user.isAdmin,
+        profileImage: user.profileImage,
       },
     });
   } catch (error) {
@@ -109,6 +112,7 @@ export const editUser = async (req, res) => {
         email: updatedUser.email,
         mobile: updatedUser.mobile,
         isAdmin: updatedUser.isAdmin,
+        profileImage: updatedUser.profileImage,
       },
     });
   } catch (error) {
@@ -117,28 +121,63 @@ export const editUser = async (req, res) => {
   }
 };
 
-// Update profile image separately
+// Update profile image separately using Cloudinary
 export const updateProfileImage = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!req.file) {
-      return res.status(400).json({ message: "No image uploaded" });
+    const { profileImage } = req.body;
+
+    if (!profileImage) {
+      return res.status(400).json({ message: "No image provided" });
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { profileImage: req.file.path }, // multer saves path
-      { new: true }
-    );
-
-    if (!updatedUser) {
+    const user = await User.findById(id);
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({
-      message: "Profile image updated successfully",
-      profileImage: updatedUser.profileImage,
-    });
+    try {
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(profileImage, {
+        folder: "profile_images",
+        resource_type: "image",
+        transformation: [
+          { width: 500, height: 500, crop: "limit" }, // Limit max size
+          { quality: "auto" }, // Auto quality
+        ],
+      });
+
+      const newImageUrl = result.secure_url;
+
+      // Delete old image from Cloudinary if exists
+      if (user.profileImage) {
+        try {
+          const urlParts = user.profileImage.split('/');
+          const publicIdWithExt = urlParts[urlParts.length - 1];
+          const publicId = `profile_images/${publicIdWithExt.split('.')[0]}`;
+          
+          await cloudinary.uploader.destroy(publicId);
+        } catch (deleteError) {
+          console.error("Error deleting old profile image:", deleteError);
+          // Continue even if old image deletion fails
+        }
+      }
+
+      // Update user with new image URL
+      user.profileImage = newImageUrl;
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Profile image updated successfully",
+        profileImage: user.profileImage,
+      });
+    } catch (uploadError) {
+      return res.status(500).json({ 
+        message: "Image upload failed", 
+        error: uploadError.message 
+      });
+    }
   } catch (error) {
     console.error("Update Profile Image Error:", error);
     res.status(500).json({ message: "Server error" });

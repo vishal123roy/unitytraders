@@ -1,11 +1,12 @@
 import CustomerSchemeProgress from "../models/CustomerSchemeProgress.js";
+import scheme from "../models/scheme.js";
 import User from "../models/user.js"
 
 export const getUser = async (req,res) => {
     try {
         const {id:userId} = req.params;
 
-        const user = await User.findOne({_id:userId});
+        const user = await User.serId);
 
         if(!user){
            return res.status(400).json({Message:"user not found"});
@@ -17,20 +18,24 @@ export const getUser = async (req,res) => {
     }
 }
 
-export const getSchemes = async (req,res) => {
-    try {
-        const activeSchemes = await scheme.find({active:true});
+export const getSchemes = async (req, res) => {
+  try {
+    const activeSchemes = await scheme.find({ active: true });
 
-        if(!activeSchemes){
-            return res.status(400).json({message:"no scheme are available"});
-        }
+    console.log("Fetched Schemes:", activeSchemes); // ✅ Debug log
 
-        return res.status(200).json(activeSchemes);
-
-    } catch (error) {
-        res.status(500).json({message:"server error"})
+    if (!activeSchemes || activeSchemes.length === 0) {
+      return res.status(400).json({ message: "No active schemes available" });
     }
-}
+
+    return res.status(200).json(activeSchemes);
+
+  } catch (error) {
+    console.error("Error fetching schemes:", error.message); // ✅ Print real error
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 export const getMonthlyTop = async (req,res) => {
     try {
