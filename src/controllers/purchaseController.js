@@ -15,13 +15,17 @@ const findActiveSchemesByDate = async (date) => {
 export const getPurchase = async (req, res) => {
   try {
     const { id } = req.params;
-    const list = await Purchase.find({customer:id}).populate("productList.product");
+        console.log('kkkkkkkkkkkkkkkkkkk',id);
+
+    const list = await Purchase.find({customerId:id}).populate("productList.product");
+    console.log('kkkkkkkkkkkkkkkkkkk',list.length);
     return res.status(200).json(list);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 export const addPurchase = async (req, res) => {
   try {
