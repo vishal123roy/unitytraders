@@ -4,9 +4,6 @@ import Scheme from "../models/scheme.js";
 import Customer from "../models/customer.js";
 import CustomerSchemeProgress from "../models/CustomerSchemeProgress.js";
 
-/**
- * Helper: find active schemes for a given date
- */
 const findActiveSchemesByDate = async (date) => {
   return Scheme.find({
     active: true,
@@ -17,6 +14,7 @@ const findActiveSchemesByDate = async (date) => {
 
 export const getPurchase = async (req, res) => {
   try {
+    console.log("Printing")
     const list = await Purchase.find().populate("customer").populate("productList.product");
     return res.status(200).json(list);
   } catch (err) {
@@ -25,12 +23,6 @@ export const getPurchase = async (req, res) => {
   }
 };
 
-/**
- * Add purchase:
- * - create Purchase doc
- * - allocate totalPoints to active schemes (monthly, annual, special)
- * - for each scheme create/update CustomerSchemeProgress
- */
 export const addPurchase = async (req, res) => {
   try {
     const { customerId, productList, totalPoints } = req.body;
@@ -38,8 +30,8 @@ export const addPurchase = async (req, res) => {
     if (!customerId || !productList || totalPoints === undefined) {
       return res.status(400).json({ message: "all fields are required",customerId,productList,totalPoints });
     }
-
-    const customer = await Customer.findById(customerId);
+console.log(customerId)
+    const customer = await Customer.findById(customerId.trim());
     if (!customer) return res.status(404).json({ message: "Customer not found" });
 
     // create purchase doc (date = now)
