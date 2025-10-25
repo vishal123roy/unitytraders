@@ -19,6 +19,7 @@ export const getProduct = async (req, res) => {
 export const addProduct = async (req, res) => {
   try {
     const { productName, unit, point } = req.body;
+    console.log(productName,unit,point)
     const productImage = req.file ? req.file.path : null;
 
     if (!productName || !unit || !point) {

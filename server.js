@@ -30,7 +30,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/customers", customerSchemeRoutes);
 
 app.use("/api/schemes",schemeRoutes);
-app.use("/api/home",homeRoutes)
+app.use("/api/home",homeRoutes);
 
 connectDB();
 
