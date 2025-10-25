@@ -14,8 +14,8 @@ const findActiveSchemesByDate = async (date) => {
 
 export const getPurchase = async (req, res) => {
   try {
-    console.log("Printing")
-    const list = await Purchase.find().populate("customer").populate("productList.product");
+    const { id } = req.params;
+    const list = await Purchase.find({customer:id}).populate("productList.product");
     return res.status(200).json(list);
   } catch (err) {
     console.error(err);
@@ -36,7 +36,7 @@ console.log(customerId)
 
     // create purchase doc (date = now)
     const purchase = new Purchase({
-      customer: customerId,
+      customerId: customerId,
       date: new Date(),
       productList: productList,
       totalPoints: totalPoints,

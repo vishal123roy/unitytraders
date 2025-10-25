@@ -4,8 +4,8 @@ import { addPurchase, getPurchase, getPurchaseList } from "../controllers/purcha
 
 const router = express.Router();
 
-router.post("/", addPurchase);
-router.get("/", getPurchase);
+router.post("/addPurchase", addPurchase);
+router.get("/getPurchase/:id", getPurchase);
 router.get("/purchaselist/:id", getPurchaseList);
 
 export default router;

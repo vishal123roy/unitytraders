@@ -20,7 +20,7 @@ const app = express();
 
 // ✅ Increase upload size limits (to prevent 413 Payload Too Large)
 app.use(express.json({ limit: "10mb" })); // 🔥 allow JSON up to 10MB
-app.use(express.urlencoded({ extended: true, limit: "10mb" })); // 🔥 allow URL-encoded up to 10MB
+app.use(express.urlencoded({ extended: true, limit: "10mb" })); // allow URL-encoded up to 10MB
 
 // ✅ If using multer or base64 images, increase also in multer config separately
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

@@ -2,7 +2,7 @@
 import mongoose from "mongoose";
 
 const purchaseSchema = new mongoose.Schema({
-  customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
   date: { type: Date, required: true },
   productList: [
     {
