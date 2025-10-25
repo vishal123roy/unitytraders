@@ -17,9 +17,8 @@ export const getProduct = async (req, res) => {
 // 🟢 Add product (image sent as base64 string in form)
 export const addProduct = async (req, res) => {
   try {
-    // All fields come from form
-    const { productName, unit, point, productImage } = req.body;
-    console.log('ppppppppppppppppppppppppppp',req.body.productName)
+    const { productName, unit, point } = req.body;
+    const productImage = req.file ? req.file.path : null;
 
     if (!productName || !unit || !point) {
       return res.status(400).json({ message: "All fields are required" });
