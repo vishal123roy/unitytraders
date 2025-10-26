@@ -30,55 +30,67 @@ export const getPurchase = async (req, res) => {
 export const addPurchase = async (req, res) => {
   try {
     const { customerId, productList, totalPoints } = req.body;
-    console.log("Printing the response")
+
     if (!customerId || !productList || totalPoints === undefined) {
-      return res.status(400).json({ message: "all fields are required",customerId,productList,totalPoints });
+      return res.status(400).json({ message: "All fields are required" });
     }
-console.log(customerId)
+
+    // 1️⃣ Check customer
     const customer = await Customer.findById(customerId.trim());
     if (!customer) return res.status(404).json({ message: "Customer not found" });
 
-    // create purchase doc (date = now)
+    // 2️⃣ Create new purchase
     const purchase = new Purchase({
-      customerId: customerId,
+      customerId,
       date: new Date(),
-      productList: productList,
-      totalPoints: totalPoints,
+      productList,
+      totalPoints,
     });
     await purchase.save();
 
-    // allocate points to active schemes
+    // 3️⃣ Add points to customer (main total)
+    customer.point += totalPoints;
+    await customer.save();
+
+    // 4️⃣ Allocate points to active schemes
     const activeSchemes = await findActiveSchemesByDate(purchase.date);
-  
+
     for (const scheme of activeSchemes) {
-      // find or create progress doc
-      let progress = await CustomerSchemeProgress.findOne({ customer: customerId, scheme: scheme._id });
+      let progress = await CustomerSchemeProgress.findOne({
+        customer: customerId,
+        scheme: scheme._id,
+      });
+
       if (!progress) {
-        progress = new CustomerSchemeProgress({ customer: customerId, scheme: scheme._id });
+        progress = new CustomerSchemeProgress({
+          customer: customerId,
+          scheme: scheme._id,
+          earnedPoints: 0,
+          usedPoints: 0,
+          achievedSlabs: [],
+        });
       }
 
-      // compute remaining allowed points for the scheme (don't exceed scheme.maxPoint)
+      // calculate remaining points that can be allocated
       const remainingCapacity = Math.max(0, scheme.maxPoint - (progress.earnedPoints || 0));
-      if (remainingCapacity <= 0) {
+      if (remainingCapacity <= 0) continue;
 
-        // scheme already full for this customer
-        await progress.save();
-        continue;
-      }
-
-      // amount to allocate = min(purchase total, remainingCapacity)
       const allocate = Math.min(totalPoints, remainingCapacity);
-      progress.earnedPoints = (progress.earnedPoints || 0) + allocate;
+      progress.earnedPoints += allocate;
 
       await progress.save();
     }
 
-    return res.status(201).json({ message: "Purchase saved and points allocated", purchase });
+    return res.status(201).json({
+      message: "Purchase saved, customer points updated, and scheme points allocated.",
+      purchase,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Error adding purchase:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 /**
  * Get purchase product list for a purchase id (existing endpoint you had)
