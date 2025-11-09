@@ -10,7 +10,6 @@ const customerSchemeProgress = new mongoose.Schema({
     redeemedAt: Date
   }],
   // optional: for monthly schemes you may want to store the period it belongs to,
-  // but here we keep a single doc per customer+scheme and reset usedPoints only when needed
   
 }, { timestamps: true });
 

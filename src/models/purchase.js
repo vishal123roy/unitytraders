@@ -14,3 +14,4 @@ const purchaseSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export default mongoose.model("Purchase", purchaseSchema);
+  // optional: for monthly schemes you may want to store the period it belongs to,
