@@ -8,9 +8,7 @@ const customerSchemeProgress = new mongoose.Schema({
   achievedSlabs: [{ // list of redeemed slab levels
     level: Number,
     redeemedAt: Date
-  }],
-  // optional: for monthly schemes you may want to store the period it belongs to,
-  
+  }],  
 }, { timestamps: true });
 
 customerSchemeProgress.index({ customer: 1, scheme: 1 }, { unique: true });

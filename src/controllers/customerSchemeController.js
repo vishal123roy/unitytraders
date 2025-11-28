@@ -27,8 +27,10 @@ export const redeemSlab = async (req, res) => {
     const customer = await Customer.findById({_id:customerId});
     if (!customer) return res.status(404).json({ message: "Customer not found" });
 
+
     const scheme = await Scheme.findById({_id:schemeId});
     if (!scheme) return res.status(404).json({ message: "Scheme not found" });
+    
 
     const slab = scheme.slabs.find(s => s.level === Number(slabLevel));
     if (!slab) return res.status(404).json({ message: "Slab not found" });
@@ -38,12 +40,13 @@ export const redeemSlab = async (req, res) => {
     if (!progress) {
       return res.status(400).json({message:"progress not created"});
     }
-
     // check if already redeemed this level
     if (progress.achievedSlabs.some(s => s.level === Number(slabLevel))) {
       return res.status(400).json({ message: "Slab already redeemed" });
     }
-
+    if(progress.earnedPoints < slab.targetPoint){
+      return res.status(400).json({message:"not eligible"})
+    };
     // consume points for this scheme
     progress.achievedSlabs.push({ level: slab.level, redeemedAt: new Date()});
 

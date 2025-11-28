@@ -3,6 +3,7 @@ import Purchase from "../models/purchase.js";
 import Scheme from "../models/scheme.js";
 import Customer from "../models/customer.js";
 import CustomerSchemeProgress from "../models/CustomerSchemeProgress.js";
+import { resolve } from "path";
 
 const findActiveSchemesByDate = async (date) => {
   return Scheme.find({
@@ -15,10 +16,7 @@ const findActiveSchemesByDate = async (date) => {
 export const getPurchase = async (req, res) => {
   try {
     const { id } = req.params;
-        console.log('kkkkkkkkkkkkkkkkkkk',id);
-
     const list = await Purchase.find({customerId:id}).populate("productList.product");
-    console.log('kkkkkkkkkkkkkkkkkkk',list.length);
     return res.status(200).json(list);
   } catch (err) {
     console.error(err);
@@ -91,10 +89,6 @@ export const addPurchase = async (req, res) => {
   }
 };
 
-
-/**
- * Get purchase product list for a purchase id (existing endpoint you had)
- */
 export const getPurchaseList = async (req, res) => {
   try {
     const { id: purchaseId } = req.params;
@@ -106,3 +100,39 @@ export const getPurchaseList = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+export const removePurchase = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "purchase id required" });
+    }
+
+    const purchaseDetail = await Purchase.findById(id);
+    if (!purchaseDetail) {
+      return res.status(404).json({ message: "purchase not found" });
+    }
+
+    const { customerId, totalPoints } = purchaseDetail;
+
+    await CustomerSchemeProgress.updateMany(
+      { customer: customerId },
+      { $inc: { earnedPoints: -totalPoints } }
+    );
+
+    await Purchase.findByIdAndDelete(id);
+
+    const updated = await CustomerSchemeProgress.find({ customer: customerId });
+
+    res.status(200).json({
+      message: "Purchase removed and scheme progress updated",
+      updatedProgress: updated
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+  }
+};
+
