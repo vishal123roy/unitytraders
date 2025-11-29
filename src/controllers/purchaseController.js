@@ -37,10 +37,13 @@ export const addPurchase = async (req, res) => {
     const customer = await Customer.findById(customerId.trim());
     if (!customer) return res.status(404).json({ message: "Customer not found" });
 
+    const now = new Date();
+    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+
     // 2️⃣ Create new purchase
     const purchase = new Purchase({
       customerId,
-      date: new Date(),
+      date: istTime,
       productList,
       totalPoints,
     });
