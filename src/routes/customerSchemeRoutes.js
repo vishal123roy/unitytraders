@@ -10,4 +10,6 @@ router.get("/:customerId/progress", getCustomerProgress);
 // POST /api/customers/:customerId/redeem
 router.post("/:customerId/redeem", redeemSlab);
 
+// router.get("/topCustomers",getTopCustomers);
+
 export default router;

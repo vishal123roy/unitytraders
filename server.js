@@ -29,7 +29,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/customer-routes", customerRoutes);
 app.use("/api/purchases", purchaseRoutes);
-app.use("/api/products", productRoutes);
 app.use("/api/customers", customerSchemeRoutes);
 app.use("/api/schemes", schemeRoutes);
 app.use("/api/home", homeRoutes);

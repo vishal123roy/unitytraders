@@ -58,3 +58,18 @@ export const redeemSlab = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+
+// export const gettopMonthlyCustomers = async (req,res) => {
+//       try {
+//         const annualScheme = await Scheme.findOne({schemeType:"monthly"});
+//         if(!annualScheme){
+//           return res.status(400).json({message:"scheme is not available"});
+//         }
+//         const customerList =  await CustomerSchemeProgress.find()
+
+//         res.status(200).json(annualScheme);
+//       } catch (error) {
+//         res.status(500).json({message:"server error"});
+//       }
+// }
