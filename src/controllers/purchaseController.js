@@ -16,14 +16,17 @@ const findActiveSchemesByDate = async (date) => {
 export const getPurchase = async (req, res) => {
   try {
     const { id } = req.params;
-    const list = await Purchase.find({customerId:id}).populate("productList.product");
+    const list = await Purchase.find({ customerId: id }).populate(
+      "productList.product"
+    );
     return res.status(200).json(list);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
-
 
 export const addPurchase = async (req, res) => {
   try {
@@ -35,10 +38,11 @@ export const addPurchase = async (req, res) => {
 
     // 1️⃣ Check customer
     const customer = await Customer.findById(customerId.trim());
-    if (!customer) return res.status(404).json({ message: "Customer not found" });
+    if (!customer)
+      return res.status(404).json({ message: "Customer not found" });
 
     const now = new Date();
-    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
 
     // 2️⃣ Create new purchase
     const purchase = new Purchase({
@@ -73,7 +77,10 @@ export const addPurchase = async (req, res) => {
       }
 
       // calculate remaining points that can be allocated
-      const remainingCapacity = Math.max(0, scheme.maxPoint - (progress.earnedPoints || 0));
+      const remainingCapacity = Math.max(
+        0,
+        scheme.maxPoint - (progress.earnedPoints || 0)
+      );
       if (remainingCapacity <= 0) continue;
 
       const allocate = Math.min(totalPoints, remainingCapacity);
@@ -83,24 +90,32 @@ export const addPurchase = async (req, res) => {
     }
 
     return res.status(201).json({
-      message: "Purchase saved, customer points updated, and scheme points allocated.",
+      message:
+        "Purchase saved, customer points updated, and scheme points allocated.",
       purchase,
     });
   } catch (err) {
     console.error("Error adding purchase:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
 export const getPurchaseList = async (req, res) => {
   try {
     const { id: purchaseId } = req.params;
-    const purchaseList = await Purchase.findById(purchaseId).populate("productList.product");
-    if (!purchaseList) return res.status(404).json({ message: "Purchase not found" });
+    const purchaseList = await Purchase.findById(purchaseId).populate(
+      "productList.product"
+    );
+    if (!purchaseList)
+      return res.status(404).json({ message: "Purchase not found" });
     return res.status(200).json(purchaseList.productList);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
@@ -117,25 +132,34 @@ export const removePurchase = async (req, res) => {
       return res.status(404).json({ message: "purchase not found" });
     }
 
-    const { customerId, totalPoints } = purchaseDetail;  
+    const { customerId, totalPoints } = purchaseDetail;
 
-    await CustomerSchemeProgress.updateMany(
-      { customer: customerId },
-      [{$set:{earnedPoints:{$max:[{$subtract:["$earnedPoints",totalPoints]},0]}}}]
-    );
+    await CustomerSchemeProgress.updateMany({ customer: customerId }, [
+      {
+        $set: {
+          earnedPoints: {
+            $max: [{ $subtract: ["$earnedPoints", totalPoints] }, 0],
+          },
+        },
+      },
+    ]);
 
     await Purchase.findByIdAndDelete(id);
+
+    await Customer.findByIdAndUpdate(customerId, [
+      {
+        $set: { point: { $max: [{ $subtract: ["$point", totalPoints] }, 0] } },
+      },
+    ]);
 
     const updated = await CustomerSchemeProgress.find({ customer: customerId });
 
     res.status(200).json({
       message: "Purchase removed and scheme progress updated",
-      updatedProgress: updated
+      updatedProgress: updated,
     });
-
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "server error" });
   }
 };
-
