@@ -117,11 +117,11 @@ export const removePurchase = async (req, res) => {
       return res.status(404).json({ message: "purchase not found" });
     }
 
-    const { customerId, totalPoints } = purchaseDetail;
+    const { customerId, totalPoints } = purchaseDetail;  
 
     await CustomerSchemeProgress.updateMany(
       { customer: customerId },
-      { $inc: { earnedPoints: -totalPoints } }
+      [{$set:{earnedPoints:{$max:[{$subtract:["$earnedPoints",totalPoints]},0]}}}]
     );
 
     await Purchase.findByIdAndDelete(id);

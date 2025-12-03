@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 const customerSchemeProgress = new mongoose.Schema({
   customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
   scheme: { type: mongoose.Schema.Types.ObjectId, ref: "Scheme", required: true },
-  earnedPoints: { type: Number, default: 0 }, // total earned (allocated)   // consumed by redemptions
+  earnedPoints: { type: Number, default: 0, min:0 }, // total earned (allocated)   // consumed by redemptions
   achievedSlabs: [{ // list of redeemed slab levels
     level: Number,
     redeemedAt: Date
